@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dracula">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 GameZone — O'yinlar Dunyosi</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Morris.js uchun Raphael va Morris -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        .game-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .game-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .game-card:hover .game-emoji {
+            transform: scale(1.2) rotate(5deg);
+        }
+        .game-emoji {
+            transition: transform 0.3s ease;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.8), 0 0 50px rgba(118, 75, 162, 0.3); }
+        }
+        .category-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+        }
+        #stats-chart {
+            min-height: 250px;
+        }
+        .navbar-blur {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .stars-bg {
+            background-image: radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                              radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.5), transparent),
+                              radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                              radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                              radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-base-200 stars-bg">
+
+    <!-- NAVBAR -->
+    <div class="navbar bg-base-100/80 navbar-blur sticky top-0 z-50 shadow-lg">
+        <div class="navbar-start">
+            <a class="btn btn-ghost text-xl font-bold gap-2" href="index.html">
+                <span class="text-2xl">🎮</span>
+                <span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">GameZone</span>
+            </a>
+        </div>
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1 gap-1">
+                <li><a href="#games" class="font-medium"><i class="bi bi-controller"></i> O'yinlar</a></li>
+                <li><a href="#stats" class="font-medium"><i class="bi bi-graph-up"></i> Statistika</a></li>
+                <li><a href="#about" class="font-medium"><i class="bi bi-info-circle"></i> Haqida</a></li>
+            </ul>
+        </div>
+        <div class="navbar-end">
+            <div class="dropdown dropdown-end lg:hidden">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+                    <i class="bi bi-list text-xl"></i>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a href="#games"><i class="bi bi-controller"></i> O'yinlar</a></li>
+                    <li><a href="#stats"><i class="bi bi-graph-up"></i> Statistika</a></li>
+                    <li><a href="#about"><i class="bi bi-info-circle"></i> Haqida</a></li>
+                </ul>
+            </div>
+            <label class="swap swap-rotate btn btn-ghost btn-circle">
+                <input type="checkbox" id="themeToggle" />
+                <i class="bi bi-sun-fill swap-on text-xl text-warning"></i>
+                <i class="bi bi-moon-fill swap-off text-xl"></i>
+            </label>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero min-h-[70vh] hero-gradient relative overflow-hidden">
+        <div class="hero-overlay bg-opacity-30"></div>
+        <div class="hero-content text-center text-neutral-content py-20">
+            <div class="max-w-2xl">
+                <div class="text-7xl mb-6 floating">🎮</div>
+                <h1 class="text-5xl md:text-6xl font-extrabold mb-4 leading-tight">
+                    O'yinlar <span class="text-warning">Dunyosi</span>ga <br> Xush Kelibsiz!
+                </h1>
+                <p class="text-lg md:text-xl mb-8 opacity-90">
+                    15 ta klassik va qiziqarli o'yinlar — barchasi brauzeringizda, hech narsa o'rnatmasdan!
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#games" class="btn btn-warning btn-lg gap-2 pulse-glow">
+                        <i class="bi bi-play-fill text-xl"></i> O'ynashni Boshlash
+                    </a>
+                    <a href="#stats" class="btn btn-outline btn-lg text-white border-white hover:bg-white hover:text-purple-700 gap-2">
+                        <i class="bi bi-trophy"></i> Natijalarim
+                    </a>
+                </div>
+                <div class="flex flex-wrap justify-center gap-6 mt-10">
+                    <div class="stat-item text-center">
+                        <div class="text-3xl font-bold text-warning" id="totalGames">15</div>
+                        <div class="text-sm opacity-70">O'yinlar</div>
+                    </div>
+                    <div class="divider divider-horizontal divider-warning"></div>
+                    <div class="stat-item text-center">
+                        <div class="text-3xl font-bold text-warning" id="totalPlayed">0</div>
+                        <div class="text-sm opacity-70">O'ynalgan</div>
+                    </div>
+                    <div class="divider divider-horizontal divider-warning"></div>
+                    <div class="stat-item text-center">
+                        <div class="text-3xl font-bold text-warning" id="totalHighScores">0</div>
+                        <div class="text-sm opacity-70">Rekordlar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute -bottom-1 left-0 right-0">
+            <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,96L48,85.3C96,75,192,53,288,48C384,43,480,53,576,69.3C672,85,768,107,864,112C960,117,1056,107,1152,90.7C1248,75,1344,53,1392,42.7L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" class="fill-base-200"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- FILTER -->
+    <section class="py-6 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-wrap justify-center gap-2">
+                <button class="btn btn-sm btn-primary filter-btn active" data-filter="all">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Barchasi
+                </button>
+                <button class="btn btn-sm btn-outline btn-primary filter-btn" data-filter="puzzle">
+                    <i class="bi bi-puzzle"></i> Puzzle
+                </button>
+                <button class="btn btn-sm btn-outline btn-primary filter-btn" data-filter="arcade">
+                    <i class="bi bi-joystick"></i> Arcade
+                </button>
+                <button class="btn btn-sm btn-outline btn-primary filter-btn" data-filter="board">
+                    <i class="bi bi-dice-5"></i> Board
+                </button>
+                <button class="btn btn-sm btn-outline btn-primary filter-btn" data-filter="classic">
+                    <i class="bi bi-controller"></i> Classic
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- O'YINLAR GRID -->
+    <section id="games" class="py-10 px-4">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2">
+                <i class="bi bi-controller text-primary"></i> O'yinlar Kolleksiyasi
+            </h2>
+            <p class="text-center text-base-content/60 mb-10">O'zingizga yoqqan o'yinni tanlang va zavqlaning!</p>
+            <div id="gamesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"></div>
+        </div>
+    </section>
+
+    <!-- STATISTIKA -->
+    <section id="stats" class="py-16 px-4 bg-base-300/50">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2">
+                <i class="bi bi-graph-up text-secondary"></i> O'yin Statistikasi
+            </h2>
+            <p class="text-center text-base-content/60 mb-10">Eng yaxshi natijalaringiz va o'yin faoliyatingiz</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-lg"><i class="bi bi-bar-chart-fill text-primary"></i> Eng Yaxshi Natijalar</h3>
+                        <div id="stats-chart"></div>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-lg"><i class="bi bi-trophy-fill text-warning"></i> Rekordlar Jadvali</h3>
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra" id="scoresTable">
+                                <thead>
+                                    <tr><th>#</th><th>O'yin</th><th>Eng Yaxshi</th><th>Marta</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-outline btn-error btn-sm" onclick="clearAllScores()">
+                                <i class="bi bi-trash3"></i> Tozalash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HAQIDA -->
+    <section id="about" class="py-16 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-6"><i class="bi bi-info-circle text-info"></i> Sayt Haqida</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="card-body items-center text-center">
+                        <div class="text-4xl mb-2">🌐</div>
+                        <h3 class="card-title">Brauzerda</h3>
+                        <p class="text-base-content/70">Hech narsa o'rnatmasdan, to'g'ridan-to'g'ri brauzerda o'ynang</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="card-body items-center text-center">
+                        <div class="text-4xl mb-2">📱</div>
+                        <h3 class="card-title">Responsive</h3>
+                        <p class="text-base-content/70">Telefon, planshet va kompyuterda mukammal ishlaydi</p>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="card-body items-center text-center">
+                        <div class="text-4xl mb-2">🏆</div>
+                        <h3 class="card-title">Natijalar</h3>
+                        <p class="text-base-content/70">Eng yaxshi natijalaringiz avtomatik saqlanadi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer footer-center p-10 bg-base-300 text-base-content">
+        <aside>
+            <div class="text-4xl mb-2">🎮</div>
+            <p class="font-bold text-lg">GameZone — O'yinlar Dunyosi</p>
+            <p class="text-base-content/60">15 ta klassik o'yinlar to'plami</p>
+            <p class="text-sm text-base-content/40 mt-2">HTML5 + Canvas JS + Tailwind CSS + DaisyUI bilan yaratilgan</p>
+        </aside>
+        <nav>
+            <div class="grid grid-flow-col gap-4 text-2xl">
+                <a class="link link-hover" title="GitHub"><i class="bi bi-github"></i></a>
+                <a class="link link-hover" title="Telegram"><i class="bi bi-telegram"></i></a>
+                <a class="link link-hover" title="YouTube"><i class="bi bi-youtube"></i></a>
+            </div>
+        </nav>
+        <aside>
+            <p class="text-base-content/40">© 2024 GameZone. Barcha huquqlar himoyalangan.</p>
+        </aside>
+    </footer>
+
+    <script>
+    // O'yinlar ma'lumotlari
+    const games = [
+        { id: 'tic-tac-toe', name: 'XO (Tic-Tac-Toe)', emoji: '❌⭕', description: "Klassik XO o'yini — kompyuter bilan o'ynang!", category: 'board', file: 'games/tic-tac-toe.html' },
+        { id: 'puzzle', name: 'Number Puzzle', emoji: '🧩', description: "Raqamlarni tartibga keltiring — 15-puzzle klassik o'yini", category: 'puzzle', file: 'games/puzzle.html' },
+        { id: 'block-blast', name: 'Block Blast', emoji: '🟦', description: 'Bloklarni joylashtiring va qatorlarni tozalang!', category: 'puzzle', file: 'games/block-blast.html' },
+        { id: 'tetris', name: 'Tetris', emoji: '🧱', description: "Eng mashhur klassik o'yin — shakllarni joylashtiring!", category: 'classic', file: 'games/tetris.html' },
+        { id: 'bubble-shooter', name: 'Bubble Shooter', emoji: '🫧', description: "Rangli pufakchalarni otib, ularni yoring!", category: 'arcade', file: 'games/bubble-shooter.html' },
+        { id: 'snake', name: 'Snake', emoji: '🐍', description: "Ilonni boshqaring va ovqatlarni yig'ing!", category: 'classic', file: 'games/snake.html' },
+        { id: 'memory-match', name: 'Memory Match', emoji: '🃏', description: 'Kartochkalarni oching va juftliklarni toping!', category: 'puzzle', file: 'games/memory-match.html' },
+        { id: '2048', name: '2048', emoji: '🔢', description: 'Raqamlarni birlashtiring va 2048 ga yeting!', category: 'puzzle', file: 'games/2048.html' },
+        { id: 'minesweeper', name: 'Minesweeper', emoji: '💣', description: 'Minalarni toping, lekin bosib ketmang!', category: 'board', file: 'games/minesweeper.html' },
+        { id: 'breakout', name: 'Breakout', emoji: '🏓', description: "To'pni urib g'ishtlarni sindirib tashlang!", category: 'arcade', file: 'games/breakout.html' },
+        { id: 'connect4', name: 'Connect 4', emoji: '🔴🟡', description: "4 tani ketma-ket qo'ying va yutib oling!", category: 'board', file: 'games/connect4.html' },
+        { id: 'simon-says', name: 'Simon Says', emoji: '🎵', description: 'Ranglar ketma-ketligini eslab qoling!', category: 'puzzle', file: 'games/simon-says.html' },
+        { id: 'flappy-bird', name: 'Flappy Bird', emoji: '🐦', description: "Qushchani uchiring va to'siqlardan o'ting!", category: 'arcade', file: 'games/flappy-bird.html' },
+        { id: 'color-switch', name: 'Color Switch', emoji: '🎨', description: "Reaksiya tezligingizni sinab ko'ring!", category: 'arcade', file: 'games/color-switch.html' },
+        { id: 'sudoku', name: 'Sudoku', emoji: '📐', description: "Raqamli boshqotirma — mantiqiy o'yin!", category: 'board', file: 'games/sudoku.html' }
+    ];
+
+    function renderGames(filter = 'all') {
+        const grid = $('#gamesGrid');
+        grid.empty();
+        const filtered = filter === 'all' ? games : games.filter(g => g.category === filter);
+        filtered.forEach((game, index) => {
+            const highScore = localStorage.getItem(`${game.id}_highscore`) || 0;
+            const timesPlayed = localStorage.getItem(`${game.id}_played`) || 0;
+            grid.append(`
+                <a href="${game.file}" class="game-card card bg-base-100 shadow-lg cursor-pointer group" data-category="${game.category}">
+                    <div class="card-body p-5 items-center text-center">
+                        <div class="badge badge-outline badge-sm category-badge uppercase tracking-wider mb-1">${game.category}</div>
+                        <div class="game-emoji text-5xl my-3">${game.emoji}</div>
+                        <h3 class="card-title text-base font-bold">${game.name}</h3>
+                        <p class="text-xs text-base-content/60 leading-relaxed">${game.description}</p>
+                        <div class="flex gap-3 mt-3 text-xs">
+                            <div class="badge badge-ghost gap-1"><i class="bi bi-trophy-fill text-warning"></i> ${highScore}</div>
+                            <div class="badge badge-ghost gap-1"><i class="bi bi-play-circle"></i> ${timesPlayed}</div>
+                        </div>
+                        <div class="mt-3 w-full">
+                            <div class="btn btn-primary btn-sm w-full gap-1 group-hover:btn-warning transition-all"><i class="bi bi-play-fill"></i> O'ynash</div>
+                        </div>
+                    </div>
+                </a>
+            `);
+        });
+    }
+
+    $('.filter-btn').on('click', function() {
+        $('.filter-btn').removeClass('btn-primary active').addClass('btn-outline');
+        $(this).addClass('btn-primary active').removeClass('btn-outline');
+        renderGames($(this).data('filter'));
+    });
+
+    $('#themeToggle').on('change', function() {
+        const theme = this.checked ? 'light' : 'dracula';
+        $('html').attr('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    });
+
+    function loadStats() {
+        const chartData = [];
+        let totalPlayed = 0, totalHighScores = 0;
+        games.forEach(game => {
+            const hs = parseInt(localStorage.getItem(`${game.id}_highscore`) || 0);
+            const played = parseInt(localStorage.getItem(`${game.id}_played`) || 0);
+            totalPlayed += played;
+            if (hs > 0) { totalHighScores++; chartData.push({ game: game.name.substring(0, 12), score: hs }); }
+        });
+        $('#totalPlayed').text(totalPlayed);
+        $('#totalHighScores').text(totalHighScores);
+        $('#stats-chart').empty();
+        if (chartData.length > 0) {
+            try {
+                Morris.Bar({ element: 'stats-chart', data: chartData, xkey: 'game', ykeys: ['score'], labels: ['Eng yaxshi natija'], barColors: ['#6366f1'], gridTextColor: '#888', gridTextSize: 11, hideHover: 'auto', resize: true });
+            } catch(e) {
+                $('#stats-chart').html('<div class="text-center py-10 text-base-content/50"><i class="bi bi-bar-chart text-4xl"></i><p class="mt-2">Diagramma yuklanmadi</p></div>');
+            }
+        } else {
+            $('#stats-chart').html('<div class="text-center py-10 text-base-content/50"><i class="bi bi-bar-chart text-4xl"></i><p class="mt-2">Hali natijalar yo\'q. O\'yinlarni o\'ynab ko\'ring!</p></div>');
+        }
+        const tbody = $('#scoresTable tbody');
+        tbody.empty();
+        games.forEach((game, i) => {
+            tbody.append(`<tr><td>${i+1}</td><td><span class="mr-1">${game.emoji}</span> ${game.name}</td><td class="font-bold text-primary">${localStorage.getItem(`${game.id}_highscore`) || '-'}</td><td>${localStorage.getItem(`${game.id}_played`) || '0'}</td></tr>`);
+        });
+    }
+
+    function clearAllScores() {
+        if (confirm("Barcha natijalarni o'chirmoqchimisiz?")) {
+            games.forEach(game => { localStorage.removeItem(`${game.id}_highscore`); localStorage.removeItem(`${game.id}_played`); });
+            renderGames(); loadStats();
+        }
+    }
+
+    $('a[href^="#"]').on('click', function(e) {
+        e.preventDefault();
+        const target = $(this.getAttribute('href'));
+        if (target.length) $('html, body').animate({ scrollTop: target.offset().top - 70 }, 500);
+    });
+
+    $(document).ready(function() {
+        const savedTheme = localStorage.getItem('theme') || 'dracula';
+        $('html').attr('data-theme', savedTheme);
+        if (savedTheme === 'light') $('#themeToggle').prop('checked', true);
+        renderGames();
+        loadStats();
+    });
+    </script>
+</body>
+</html>
